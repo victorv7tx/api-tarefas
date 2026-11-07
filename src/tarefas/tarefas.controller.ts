@@ -11,19 +11,20 @@ import {
   Query,
 } from '@nestjs/common';
 import { TarefasService } from './tarefas.service';
+import { CreateTarefaDto } from './dto/create-tarefa.dto';
+import { UpdateTarefaDto } from './dto/upDate-tarefa.dto';
+import { FiltroTarefasDto } from '../categorias/dto/filtro-tarefas.dto';
 
 @Controller('tarefas')
 export class TarefasController {
   constructor(private readonly service: TarefasService) {}
 
-  // GET /tarefas  ou  GET /tarefas?feita=true
   @Get()
-  listar(@Query('feita') feita?: string) {
-    const filtro = feita === undefined ? undefined : feita === 'true';
-    return this.service.listar(filtro);
-  }
+    listar(
+      @Query() filtro: FiltroTarefasDto  
+    ) { return this.service.listar(filtro); }
 
-  // IMPORTANTE: esta rota precisa vir ANTES da rota ':id'
+ 
   @Get('resumo')
   resumo() {
     return this.service.resumo();
@@ -35,14 +36,14 @@ export class TarefasController {
   }
 
   @Post()
-  criar(@Body() body: { titulo: string }) {
-    return this.service.criar(body?.titulo);
+  criar(@Body() body: CreateTarefaDto) {
+    return this.service.criar(body);
   }
 
   @Patch(':id')
   atualizar(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { titulo?: string; feita?: boolean },
+    @Body() body: UpdateTarefaDto ,
   ) {
     return this.service.atualizar(id, body);
   }

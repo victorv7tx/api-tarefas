@@ -1,20 +1,31 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Tarefa } from './tarefas.interface';
+import { CreateTarefaDto } from './dto/create-tarefa.dto';
+import { FiltroTarefasDto } from '../categorias/dto/filtro-tarefas.dto';
 
 @Injectable()
 export class TarefasService {
   private tarefas: Tarefa[] = [];
-  private idCounter = 1;
+  private proximoId = 1;
 
-  listar(feita?: boolean): Tarefa[] {
-    if (feita === undefined) {
+ /* listar(feita: boolean): Tarefa[] {
+    if (filtro.feita === undefined) {
       return this.tarefas;
     }
     return this.tarefas.filter((t) => t.feita === feita);
+  }*/
+
+    listar(filtro: FiltroTarefasDto) {
+    if (filtro.feita === undefined) {
+      return this.tarefas; 
+    }
+    const feita = filtro.feita === 'true';
+    return this.tarefas.filter((tarefa) => tarefa.feita === feita)
   }
 
   resumo() {
@@ -31,7 +42,7 @@ export class TarefasService {
     return tarefa;
   }
 
-  criar(titulo: string): Tarefa {
+ /* criar(titulo: string): Tarefa {
     if (!titulo || titulo.trim() === '') {
       throw new BadRequestException('O título é obrigatório.');
     }
@@ -42,6 +53,20 @@ export class TarefasService {
     };
     this.tarefas.push(novaTarefa);
     return novaTarefa;
+  }*/
+
+  criar(body: CreateTarefaDto) {
+    const titulo = body.titulo.trim().toLowerCase()
+    const tituloExiste = this.tarefas.some(
+      (t) => t.titulo.toLocaleLowerCase() === titulo 
+    )
+
+    if (tituloExiste) {
+      throw new ConflictException("Título já cadastrado!")
+    }
+    const tarefa = {id: this.proximoId++, titulo: body.titulo, feita:false};
+    this.tarefas.push(tarefa);
+    return tarefa;
   }
 
   atualizar(id: number, dados: Partial<Tarefa>): Tarefa {
